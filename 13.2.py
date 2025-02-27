@@ -1,76 +1,111 @@
-# Функция для чтения данных из файла
-def read_file(filename):
-    shows = []
-    with open(filename, 'r', encoding='utf-8') as file:
-        for line in file:
-            day, time, kanal, type_, name = line.strip().split(maxsplit=4)
-            shows.append({
-                'day': day,
-                'time': time,
-                'kanal': kanal,
-                'type': type_,
-                'name': name
-            })
-    return shows
-
-# a) Названия передач в указанный день и время
-def shows_in_time(shows, day, start_time, end_time):
-    return [s['name'] for s in shows if s['day'] == day and start_time <= s['time'] <= end_time]
-
-# б) Названия передач в указанный день на указанном канале
-def shows_on_kanal(shows, day, kanal):
-    return [s['name'] for s in shows if s['day'] == day and s['kanal'] == kanal]
-
-# в) Информация об указанном фильме
-def movie_info(shows, movie_name):
-    for s in shows:
-        if s['name'] == movie_name:
-            return s
-    return "Такой передачи на данной неделе нет"
-
-# г) Канал и время передачи "Поле чудес"
-def find_pole_chudes(shows):
-    for s in shows:
-        if s['name'] == 'Поле чудес':
-            return f"Канал: {s['kanal']}, Время: {s['time']}"
-    return "Передача 'Поле чудес' не найдена"
-
-# д) Передачи, транслирующиеся в одно и то же время
-def duplicate_shows(shows):
-    times = {}
-    for s in shows:
-        if s['time'] in times:
-            times[s['time']].append(s['name'])
-        else:
-            times[s['time']] = [s['name']]
-    return {t: names for t, names in times.items() if len(names) > 1}
-
-# е) Передачи в указанное время
-def shows_at_time(shows, time):
-    return [s['name'] for s in shows if s['time'] == time]
-
-# ж) Самая продолжительная передача в понедельник
-def longest_show(shows, day):
-    # Предположим, что продолжительность не указана, вернем первую найденную
-    return next((s['name'] for s in shows if s['day'] == day), None)
-
-# з) Передачи, завершающие эфир каждый день
-def final_shows(shows):
-    days = {}
-    for s in shows:
-        if s['day'] not in days or s['time'] > days[s['day']]['time']:
-            days[s['day']] = s
-    return {day: s['name'] for day, s in days.items()}
+def read_data(filename):
+    records = []
+    with open(filename, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            specialty, experience, education, gender, age = line.split(',')
+            record = {
+                'specialty': specialty.strip(),
+                'experience': int(experience.strip()),
+                'education': education.strip(),
+                'gender': gender.strip(),
+                'age': int(age.strip())
+            }
+            records.append(record)
+    return records
 
 
-filename = 'TV_for13_2.txt'
-shows = read_file(filename)
+def main():
+    data = read_data('data.txt')
 
-print("a)", shows_in_time(shows, "Понедельник", "10:00", "12:00"))
-print("б)", shows_on_kanal(shows, "Понедельник", "Канал1"))
-print("в)", movie_info(shows, "Название1"))
-print("г)", find_pole_chudes(shows))
-print("д)", duplicate_shows(shows))
-print("е)", shows_at_time(shows, "10:00"))
-print("ж)", longest_show(shows, "Понедельник"))
-print("з)", final_shows(shows))
+    doctors_with_experience = [
+        person for person in data
+        if person['specialty'].lower() == 'врач'
+           and person['experience'] >= 5
+    ]
+
+    econ_younger_35 = [
+        person for person in data
+        if person['education'].lower() == 'экономическое'
+           and person['age'] <= 35
+    ]
+
+    trade_workers = [
+        person for person in data
+        if 'торгов' in person['specialty'].lower() or 'торгов' in person['education'].lower()
+    ]
+
+    women_20_40 = [
+        person for person in data
+        if person['gender'].lower() == 'женщина'
+           and 20 <= person['age'] <= 40
+    ]
+
+    men = [person for person in data if person['gender'].lower() == 'мужчина']
+    if len(men) > 0:
+        avg_age_men = sum(p['age'] for p in men) / len(men)
+    else:
+        avg_age_men = 0
+
+    possible_higher_educations = ['экономическое', 'медицинское']
+
+    women_with_higher = [
+        p for p in data
+        if p['gender'].lower() == 'женщина'
+           and p['education'].lower() in possible_higher_educations
+    ]
+    men_with_higher = [
+        p for p in data
+        if p['gender'].lower() == 'мужчина'
+           and p['education'].lower() in possible_higher_educations
+    ]
+
+    more_higher_education = 'женщины'
+    if len(men_with_higher) > len(women_with_higher):
+        more_higher_education = 'мужчины'
+
+    if len(data) > 0:
+        min_age = min(p['age'] for p in data)
+        youngest = [p for p in data if p['age'] == min_age]
+    else:
+        youngest = []
+
+    print("a) Врачи с опытом >= 5 лет:")
+    for person in doctors_with_experience:
+        print(
+            f"{person['specialty']}, {person['experience']} лет опыта, {person['education']}, {person['gender']}, {person['age']} лет")
+    print()
+
+    print("b) Экономическое образование, не старше 35:")
+    for person in econ_younger_35:
+        print(
+            f"{person['specialty']}, {person['experience']} лет опыта, {person['education']}, {person['gender']}, {person['age']} лет")
+    print()
+
+    print("c) Работники в сфере торговли:")
+    for person in trade_workers:
+        print(
+            f"{person['specialty']}, {person['experience']} лет опыта, {person['education']}, {person['gender']}, {person['age']} лет")
+    print()
+
+    print("d) Все женщины 20-40 лет:")
+    for person in women_20_40:
+        print(
+            f"{person['specialty']}, {person['experience']} лет опыта, {person['education']}, {person['gender']}, {person['age']} лет")
+    print()
+
+    print(f"e) Средний возраст мужчин: {avg_age_men:.2f}")
+    print()
+
+    print(f"f) Больше всего людей с высшим (по нашему определению) образованием у: {more_higher_education}")
+    print()
+
+    print("g) Самые молодые работники:")
+    for person in youngest:
+        print(
+            f"{person['specialty']}, {person['experience']} лет опыта, {person['education']}, {person['gender']}, {person['age']} лет")
+
+
+main()
